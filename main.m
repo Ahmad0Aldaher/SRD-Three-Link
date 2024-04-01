@@ -14,7 +14,8 @@ Handler_State_StateSpace = SRDHandler_StateConverter_GenCoord2StateSpace(...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Handler_dynamics_generalized_coordinates_model = SRD_get('Handler_dynamics_generalized_coordinates_model');
 % Handler_dynamics_Linearized_Model = SRD_get('Handler_dynamics_Linearized_Model');
-Handler_Constraints_Model = SRD_get('Handler_Constraints_Model');
+Handler_Constraints_Model  = SRD_get('Handler_Constraints_Model');
+Handler_ExtenalForce_Model = SRD_get('Handler_ExtenalForce_Model');
  
 
 Handler_dynamics_GC_model_evaluator = SRDHandler_dynamics_GC_model_evaluator(...
@@ -24,9 +25,10 @@ Handler_dynamics_GC_model_evaluator = SRDHandler_dynamics_GC_model_evaluator(...
 
 
 %% Linear model finite difference A and B
-Handler_Linear_model_orthogonal = SRDHandler_Linear_model_finite_dif_constrained_orthogonal(...
+Handler_Linear_model_orthogonal = SRDHandler_Linear_model_finite_dif_external_force(...
      'Handler_dynamics_generalized_coordinates_model', Handler_dynamics_generalized_coordinates_model, ...
     'Handler_Constraints_Model', Handler_Constraints_Model, ...
+    'Handler_ExtenalForce_Model', Handler_ExtenalForce_Model, ...
     'Handler_State', Handler_State, ...
     'Handler_Controller', [], ...
     'finite_dif_step_z', 0.0001, 'finite_dif_step_zeta', 0.0001, 'finite_dif_step_u',0.00001);
@@ -129,9 +131,15 @@ B = Handler_Linear_model_orthogonal.B;
 disp("B")
 disp(B)
 
+D = Handler_Linear_model_orthogonal.D;
+
+disp("D")
+disp(D)
+
 save('Ar','Ar')
 save('Arho','Arho')
 save('B','B')
+save('D','D')
 
 %%
 % x = [q, v]

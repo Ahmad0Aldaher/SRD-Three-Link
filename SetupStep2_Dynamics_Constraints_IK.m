@@ -1,7 +1,7 @@
 close all; clear; %clear classes;
 clc; 
 
-RedoLinearization = false;
+RedoLinearization = false; %not needed, we use finite-difference
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Dynamics
@@ -73,9 +73,47 @@ Handler_Constraints_Model = SRD_get_handler__Constraints_model('description', de
     'dof_configuration_space_robot', SymbolicEngine.dof);
 SRD_save(Handler_Constraints_Model, 'Handler_Constraints_Model');
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% External input
+
+%%%%%%%%%%%%
+%construct constraint
+external_force_application = SymbolicEngine.LinkArray(3).AbsoluteCoM(3);       
+ 
+
+[description, S, dS] = SRD_generate_second_derivative_Jacobians('SymbolicEngine', SymbolicEngine, ...
+    'Task',                                   external_force_application, ...
+    'Casadi_cfile_name',                     'g_Constraints', ...
+    'Symbolic_ToSimplify',                    true, ...
+    'Symbolic_UseParallelizedSimplification', false, ...
+    'Symbolic_ToOptimizeFunctions',           true, ...
+    'FunctionName_Task',                     'g_ExtenalForce', ...
+    'FunctionName_TaskJacobian',             'g_ExtenalForce_Jacobian', ...
+    'FunctionName_TaskJacobian_derivative',  'g_ExtenalForce_Jacobian_derivative', ...
+    'Path',                                  'ExtenalForce/');
+
+
+Handler_ExtenalForce_Model = SRD_get_handler__Constraints_model('description', description, ...
+    'dof_configuration_space_robot', SymbolicEngine.dof);
+SRD_save(Handler_ExtenalForce_Model, 'Handler_ExtenalForce_Model');
+
+
+
+
+
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
 if RedoLinearization
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Linearization
+    % Linearization 
     
     [description, A, B, iH] = SRD_generate_dynamics_linearization(...
         'SymbolicEngine',                         SymbolicEngine, ...

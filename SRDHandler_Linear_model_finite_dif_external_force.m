@@ -37,6 +37,8 @@ classdef SRDHandler_Linear_model_finite_dif_external_force < SRDHandler
         D
         c;
         
+        Hp;
+
         N;
         R;
         
@@ -169,6 +171,34 @@ classdef SRDHandler_Linear_model_finite_dif_external_force < SRDHandler
             end
             obj.D = w_array * pinv(obj.finite_dif_step_w, obj.tol);
 
+
+            % Compute H_p using finite differences
+            delta_p = obj.finite_dif_step_zeta; % Assuming this is the perturbation step for p
+            obj.Hp = zeros(obj.dof_z, obj.dof_Constraint_independent, obj.dof_Constraint_independent);
+            for i = 1:obj.dof_Constraint_independent
+                for j = 1:obj.dof_Constraint_independent
+                    dp_i = zeros(size(delta_p, 1), 1);
+                    dp_j = zeros(size(delta_p, 1), 1);
+                    dp_i(i) = delta_p(i, i);
+                    dp_j(j) = delta_p(j, j);
+
+                    %\frac{\partial^2 f_i}{\partial p_j \partial p_k} \approx \frac{f_i(x_0, p_0 + \Delta p_j + \Delta p_k) - f_i(x_0, p_0 + \Delta p_j) - f_i(x_0, p_0 + \Delta p_k) + f_i(x_0, p_0)}{\Delta p_j \Delta p_k}
+                  
+                    x_pp=x+ obj.R *(dp_i + dp_j);
+                    f_pp = obj.N' * obj.get_acceleration(x_pp, u, w0);
+                
+                    x_pi=x+ obj.R *(dp_i);
+                    f_p_i = obj.N' * obj.get_acceleration(x_pi, u, w0);
+                    
+                    x_pj=x+ obj.R *(dp_j);
+                    f_p_j = obj.N' * obj.get_acceleration(x_pj, u, w0);
+                    f_0 = obj.c;
+            
+                    obj.Hp(:, i, j) = (f_pp - f_p_i - f_p_j + f_0) / (delta_p(i, i) * delta_p(j, j));
+                end
+            end
+
+            
             
             obj.last_update_q = q;
             obj.last_update_v = v;
